@@ -1,0 +1,25 @@
+# ---- CLI ONLINE (usar com --connect) ----
+
+# registra driver
+/subsystem=datasources/jdbc-driver=postgresql:add( \
+  driver-name=postgresql, \
+  driver-module-name=org.postgresql, \
+  driver-class-name=org.postgresql.Driver)
+
+# cria datasource
+data-source add \
+  --name=PostgresDS \
+  --jndi-name=java:/jdbc/PostgresDS \
+  --driver-name=postgresql \
+  --connection-url=jdbc:postgresql://${env.DB_HOST:db}:${env.DB_PORT:5432}/${env.DB_NAME:app_db} \
+  --user-name=leonardo \
+  --password=admin \
+  --min-pool-size=2 \
+  --max-pool-size=20 \
+  --pool-prefill=true
+
+# opcional: default do JPA
+/subsystem=datasources:write-attribute(name=default-data-source, value=${env.DS_NAME:PostgresDS})
+
+# habilitar o console web HAL
+/core-service=management/management-interface=http-interface:write-attribute(name=console-enabled, value=true)

@@ -1,0 +1,26 @@
+services:
+  wildfly:
+    volumes:
+      - ./deployments:/opt/jboss/wildfly/standalone/deployments
+    tty: true
+    stdin_open: true
+
+  adminer:
+    image: adminer
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8081:8080"
+    networks: [appnet]
+
+  # Opcional: builder Maven para gerar WAR sem depender de JDK local
+  builder:
+    image: maven:3-eclipse-temurin-17
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+      - ./.m2:/root/.m2
+      - ./deployments:/workspace/deployments
+    command: ["bash", "-lc", "mvn -DskipTests package && cp target/*.war deployments/ || true"]
+    networks: [appnet]
