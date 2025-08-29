@@ -16,12 +16,30 @@ services:
       - ./db/init:/docker-entrypoint-initdb.d:ro
     networks: [appnet]
 
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+      TZ: ${TZ}
+    ports:
+      - "5672:5672"     # AMQP
+      - "15672:15672"   # UI: http://localhost:15672
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks: [appnet]
+
   wildfly:
     build:
       context: wildfly
       dockerfile: Dockerfile
     depends_on:
       db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     environment:
       TZ: ${TZ}
@@ -36,6 +54,11 @@ services:
       JDBC_DRIVER_NAME: ${JDBC_DRIVER_NAME}
       DEBUG: "true"
       DEBUG_PORT: 5005
+      # >>> RabbitMQ
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
     ports:
       - "8080:8080"   # app
       - "9990:9990"   # console/admin
