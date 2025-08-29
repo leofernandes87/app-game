@@ -66,7 +66,7 @@ public class TodosJogosPage extends BasePage {
         add(form);
 
         // Status
-        List<String> opcoes = List.of("", "NAO_INICIADO", "EM_ANDAMENTO", "FINALIZADO");
+        List<String> opcoes = List.of("", "EM_ANDAMENTO", "FINALIZADO");
         form.add(new DropDownChoice<>("status", status, opcoes));
 
         // Campos data/hora
