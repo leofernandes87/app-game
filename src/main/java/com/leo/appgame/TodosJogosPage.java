@@ -17,6 +17,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 
 import java.io.Serial;
+import java.io.Serializable;
 import java.io.StringReader;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -29,7 +30,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Se você tem uma BasePage Java, troque para "extends BasePage". */
 public class TodosJogosPage extends BasePage {
 
     @Serial
@@ -54,7 +54,7 @@ public class TodosJogosPage extends BasePage {
         feedback.setOutputMarkupId(true);
         add(feedback);
 
-        // Form de filtros (submit normal, sem Ajax)
+        // Form de filtros
         Form<Void> form = new Form<>("filtrosForm") {
             @Override
             protected void onSubmit() {
@@ -69,14 +69,14 @@ public class TodosJogosPage extends BasePage {
         List<String> opcoes = List.of("", "NAO_INICIADO", "EM_ANDAMENTO", "FINALIZADO");
         form.add(new DropDownChoice<>("status", status, opcoes));
 
-        // Campos data/hora (como datetime-local no HTML)
+        // Campos data/hora
         TextField<String> campoDe  = new TextField<>("de", de);
         campoDe.add(AttributeModifier.replace("type", "datetime-local"));
         TextField<String> campoAte = new TextField<>("ate", ate);
         campoAte.add(AttributeModifier.replace("type", "datetime-local"));
         form.add(campoDe, campoAte);
 
-        // Botão limpar (sem validação)
+        // Botão limpar
         Button limpar = new Button("limpar") {
             @Override
             public void onSubmit() {
@@ -90,9 +90,19 @@ public class TodosJogosPage extends BasePage {
         limpar.setDefaultFormProcessing(false);
         form.add(limpar);
 
-        // Tabela (ListView puro, sem JS)
+        // Tabela
         ListView<JogoVM> tabela = getComponents();
         add(tabela);
+
+        // Injeta a URL do endpoint de long-poll - ex.: /api/events/long-poll
+        ServletWebRequest swr = (ServletWebRequest) getRequest();
+        var req = swr.getContainerRequest();
+        String base = req.getScheme() + "://" + req.getServerName()
+                + ((req.getServerPort() == 80 || req.getServerPort() == 443) ? "" : ":" + req.getServerPort())
+                + req.getContextPath();
+        String eventsUrl = base + "/api/events/long-poll";
+
+        add(new Label("eventsUrl", eventsUrl).setEscapeModelStrings(true));
 
         // Carrega inicialmente (sem filtros)
         carregarJogos();
@@ -148,7 +158,6 @@ public class TodosJogosPage extends BasePage {
                                 ? o.getString("statusJogo", null)
                                 : (o.isNull("status") ? null : o.getString("status", null));
 
-                        // data/hora em ISO-8601
                         String dt = o.isNull("dataHoraPartida") ? null : o.getString("dataHoraPartida", null);
                         j.dataHoraPartida = parseIsoLocal(dt);
 
@@ -159,6 +168,7 @@ public class TodosJogosPage extends BasePage {
         } catch (Exception e) {
             error("Erro ao carregar jogos: " + e.getMessage());
             jogos.clear();
+            //todo implementar um log aqui
             e.printStackTrace();
         }
     }
@@ -181,7 +191,6 @@ public class TodosJogosPage extends BasePage {
             addParam(qs, "status", status.getObject());
         }
         if (de.getObject() != null && !de.getObject().isBlank()) {
-            // já vem como yyyy-MM-dd'T'HH:mm → a API aceita ISO truncado
             addParam(qs, "de", de.getObject());
         }
         if (ate.getObject() != null && !ate.getObject().isBlank()) {
@@ -220,7 +229,11 @@ public class TodosJogosPage extends BasePage {
     }
 
     /** View model simples para a tabela. */
-    public static class JogoVM {
+    //todo separar essa classe em um arquivo
+    public static class JogoVM implements Serializable {
+
+        @Serial
+        private static final long serialVersionUID = 1L;
         Long id;
         String timeA;
         String timeB;
@@ -246,7 +259,6 @@ public class TodosJogosPage extends BasePage {
 
         String dataHoraPartidaFmt() {
             if (dataHoraPartida == null) return "";
-            // Mostra no formato local do servidor; ajuste se quiser outro padrão
             return dataHoraPartida.toString().replace('T', ' ');
         }
     }

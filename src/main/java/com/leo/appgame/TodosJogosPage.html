@@ -5,8 +5,11 @@
     <!-- Feedback local da página -->
     <div wicket:id="localFeedback" style="margin-bottom:12px;"></div>
 
+    <!-- URL do long-poll injetada pela page -->
+    <span id="eventsUrl" wicket:id="eventsUrl" style="display:none"></span>
+
     <!-- Filtros -->
-    <form wicket:id="filtrosForm" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:16px;">
+    <form wicket:id="filtrosForm" id="filtrosFormDom" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:16px;">
         <div style="display:flex;flex-direction:column;gap:6px;">
             <label for="status">Status</label>
             <select wicket:id="status" id="status" style="padding:6px 8px;border:1px solid #ccc;border-radius:6px;min-width:200px;"></select>
@@ -58,6 +61,37 @@
         </tr>
         </tbody>
     </table>
+    <!--script do long pool-->
+    <script>
+        (function () {
+            const url = (document.getElementById('eventsUrl').textContent||'').trim();
+            if (!url) return;
+
+            let inflight = false, stopped = false, backoff = 250;
+            function schedule(ms){ if(!stopped) setTimeout(poll, ms); }
+
+            function poll(){
+                if (stopped || inflight || document.hidden) { schedule(500); return; }
+                inflight = true;
+
+                fetch(url, { method:'GET', cache:'no-store' })
+                    .then(res => {
+                        inflight = false;
+                        if (res.status === 204) { backoff = 250; schedule(0); return; }
+                        if (res.ok) {
+                            stopped = true;
+                            document.getElementById('filtrosFormDom')?.submit();
+                            return;
+                        }
+                        backoff = Math.min(backoff*2, 5000);
+                        schedule(backoff);
+                    })
+                    .catch(() => { inflight = false; backoff = Math.min(backoff*2, 5000); schedule(backoff); });
+            }
+            document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) schedule(100); });
+            schedule(0);
+        })();
+    </script>
 
 </wicket:extend>
 </html>

@@ -2,6 +2,7 @@ package com.leo.appgame.services;
 
 import com.leo.appgame.dtos.CriarJogoDto;
 import com.leo.appgame.enums.StatusJogo;
+import com.leo.appgame.messaging.RabbitPublisher;
 import com.leo.appgame.models.Jogo;
 import com.leo.appgame.repositories.JogoRepository;
 import jakarta.enterprise.context.RequestScoped;
@@ -17,6 +18,8 @@ public class JogoService {
 
     @Inject
     private JogoRepository jogoRepository;
+    @Inject
+    private RabbitPublisher rabbitPublisher;
 
     @Transactional
     public Jogo criarNovoJogo(CriarJogoDto criarJogoDto) {
@@ -27,7 +30,10 @@ public class JogoService {
         jogo.setPlacarA(0);
         jogo.setPlacarB(0);
         jogo.setStatusJogo(StatusJogo.EM_ANDAMENTO);
-        return jogoRepository.persist(jogo);
+        Jogo persisted = jogoRepository.persist(jogo);
+
+        rabbitPublisher.publishJogoCriado(persisted);
+        return persisted;
     }
 
     public Jogo buscarJogoPorId(Long id) {
