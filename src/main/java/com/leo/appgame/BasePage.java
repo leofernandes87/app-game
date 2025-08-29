@@ -6,13 +6,13 @@ import org.apache.wicket.markup.html.panel.FeedbackPanel;
 
 public abstract class BasePage extends WebPage {
     public BasePage() {
-        // ✅ IDs corrigidos para bater com o HTML
         add(new BookmarkablePageLink<>("linkHome", HomePage.class));
         add(new BookmarkablePageLink<>("linkNovoJogo", NovoJogoPage.class));
+        add(new BookmarkablePageLink<>("linkTodosJogos", TodosJogosPage.class));
 
         // Feedback global
         FeedbackPanel feedback = new FeedbackPanel("feedback");
-        feedback.setOutputMarkupId(true); // necessário para o JS
+        feedback.setOutputMarkupId(true);
         add(feedback);
     }
 }

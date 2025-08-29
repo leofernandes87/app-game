@@ -8,7 +8,9 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @RequestScoped
 public class JogoService {
@@ -32,7 +34,9 @@ public class JogoService {
         return jogoRepository.findById(id).orElse(null);
     }
 
-    public List<Jogo> buscarTodosJogos() {
-        return jogoRepository.findAll();
+    public List<Jogo> listarJogos(Optional<StatusJogo> statusOpt,
+                                  Optional<LocalDateTime> deOpt,
+                                  Optional<LocalDateTime> ateOpt) {
+        return jogoRepository.findAll(statusOpt, deOpt, ateOpt);
     }
 }

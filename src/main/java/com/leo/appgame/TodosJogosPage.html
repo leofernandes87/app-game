@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:extend>
+
+    <!-- Feedback local da página -->
+    <div wicket:id="localFeedback" style="margin-bottom:12px;"></div>
+
+    <!-- Filtros -->
+    <form wicket:id="filtrosForm" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:16px;">
+        <div style="display:flex;flex-direction:column;gap:6px;">
+            <label for="status">Status</label>
+            <select wicket:id="status" id="status" style="padding:6px 8px;border:1px solid #ccc;border-radius:6px;min-width:200px;"></select>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:6px;">
+            <label for="de">De (data/hora)</label>
+            <input wicket:id="de" id="de" style="padding:6px 8px;border:1px solid #ccc;border-radius:6px;">
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:6px;">
+            <label for="ate">Até (data/hora)</label>
+            <input wicket:id="ate" id="ate" style="padding:6px 8px;border:1px solid #ccc;border-radius:6px;">
+        </div>
+
+        <div style="display:flex;gap:8px;">
+            <button type="submit"
+                    style="padding:8px 14px;border:none;border-radius:6px;background:#003366;color:#fff;cursor:pointer;">
+                Filtrar
+            </button>
+            <button wicket:id="limpar" type="submit"
+                    style="padding:8px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;">
+                Limpar
+            </button>
+        </div>
+    </form>
+
+    <!-- Tabela -->
+    <table style="width:100%;border-collapse:collapse;">
+        <thead>
+        <tr style="background:#f4f6f9;">
+            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">ID</th>
+            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Time A</th>
+            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Time B</th>
+            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Data/Hora</th>
+            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Placar</th>
+            <th style="text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;">Status</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Cada <tr> é um item do ListView -->
+        <tr wicket:id="rows">
+            <td wicket:id="id"    style="padding:10px;border-bottom:1px solid #eee;"></td>
+            <td wicket:id="timeA" style="padding:10px;border-bottom:1px solid #eee;"></td>
+            <td wicket:id="timeB" style="padding:10px;border-bottom:1px solid #eee;"></td>
+            <td wicket:id="dataHora" style="padding:10px;border-bottom:1px solid #eee;"></td>
+            <td wicket:id="placar" style="padding:10px;border-bottom:1px solid #eee;"></td>
+            <td wicket:id="status" style="padding:10px;border-bottom:1px solid #eee;"></td>
+        </tr>
+        </tbody>
+    </table>
+
+</wicket:extend>
+</html>
