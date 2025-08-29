@@ -2,9 +2,7 @@ package com.leo.appgame;
 
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
-import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.form.*;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 
@@ -16,8 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class NovoJogoPage extends WebPage {
-
+public class NovoJogoPage extends BasePage {
     private final Model<String> timeA = Model.of("");
     private final Model<String> timeB = Model.of("");
     private final Model<Integer> placarA = Model.of(0);
@@ -28,8 +25,6 @@ public class NovoJogoPage extends WebPage {
     private static final DateTimeFormatter HTML5_DT = DateTimeFormatter.ofPattern("dd-MM-yyyy'T'HH:mm");
 
     public NovoJogoPage() {
-        add(new FeedbackPanel("feedback"));
-
         Form<Void> form = new Form<>("form") {
             @Override
             protected void onSubmit() {
@@ -113,7 +108,7 @@ public class NovoJogoPage extends WebPage {
         form.add(nfA, nfB);
 
         form.add(new DropDownChoice<>("status", status,
-                Model.ofList(java.util.List.of("EM_ANDAMENTO","FINALIZADO"))).setRequired(true));
+                Model.ofList(java.util.List.of("EM_ANDAMENTO", "FINALIZADO"))).setRequired(true));
 
         form.add(new TextField<>("dataHora", dataHora));
         form.add(new Button("salvar"));

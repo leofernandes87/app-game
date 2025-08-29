@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:wicket="http://wicket.apache.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f4f6f9;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        #header {
+            background: #003366;
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        #header a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            transition: background 0.3s ease;
+        }
+
+        #header a:hover {
+            background: #005a99;
+        }
+
+        #body {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        #feedback {
+            text-align: center;
+            margin: 16px 0;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 500;
+            opacity: 0;
+            height: 0;
+            overflow: hidden;
+            transition: opacity 0.3s ease, height 0.3s ease;
+        }
+
+        #feedback.visible {
+            opacity: 1;
+            height: auto;
+            margin: 0 0 16px 0;
+        }
+
+        /* Estilos do FeedbackPanel */
+        .feedbackPanelERROR {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .feedbackPanelINFO {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .feedbackPanelSUCCESS {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .feedbackPanelWARNING {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Menu superior -->
+<div id="header">
+    <a wicket:id="linkHome" href="#">Início</a>
+    <a wicket:id="linkNovoJogo" href="#">Cadastrar Jogo</a>
+</div>
+
+<!-- Conteúdo das páginas filhas -->
+<div id="body">
+    <wicket:child />
+</div>
+
+<!-- Painel de feedback (mensagem global) -->
+<div id="feedback">
+    <div wicket:id="feedback"></div>
+</div>
+
+<script>
+    // Mostra o feedback se houver mensagem
+    document.addEventListener("DOMContentLoaded", function () {
+        const feedbackDiv = document.querySelector("#feedback [wicket\\:id='feedback']");
+        if (feedbackDiv && feedbackDiv.children.length > 0) {
+            document.getElementById("feedback").classList.add("visible");
+        }
+    });
+</script>
+
+</body>
+</html>
