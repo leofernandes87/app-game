@@ -9,22 +9,7 @@
         <jta-data-source>java:/jdbc/PostgresDS</jta-data-source>
 
         <properties>
-            <!-- Dialeto do Hibernate p/ Postgres -->
-            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
-
-            <!-- DEV: geração de schema; ajuste como preferir -->
-            <!-- none | validate | update | create | create-drop -->
-            <property name="jakarta.persistence.schema-generation.database.action" value="create"/>
-
-            <!-- Logs SQL (opcional em DEV) -->
-            <property name="hibernate.show_sql" value="false"/>
-            <property name="hibernate.format_sql" value="false"/>
-
-            <!-- (Opcional) defina o schema padrão, se você criou um schema específico -->
-            <!-- <property name="hibernate.default_schema" value="public"/> -->
-
-            <!-- (Opcional) timezone coerente -->
-            <!-- <property name="hibernate.jdbc.time_zone" value="UTC"/> -->
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
         </properties>
     </persistence-unit>
 </persistence>

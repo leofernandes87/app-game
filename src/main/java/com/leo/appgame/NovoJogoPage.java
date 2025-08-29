@@ -6,6 +6,7 @@ import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.form.*;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -21,7 +22,7 @@ public class NovoJogoPage extends WebPage {
     private final Model<String> timeB = Model.of("");
     private final Model<Integer> placarA = Model.of(0);
     private final Model<Integer> placarB = Model.of(0);
-    private final Model<String> status = Model.of("NAO_INICIADO");
+    private final Model<String> status = Model.of("EM_ANDAMENTO");
     private final Model<String> dataHora = Model.of("");
 
     private static final DateTimeFormatter HTML5_DT = DateTimeFormatter.ofPattern("dd-MM-yyyy'T'HH:mm");
@@ -33,8 +34,9 @@ public class NovoJogoPage extends WebPage {
             @Override
             protected void onSubmit() {
                 try {
-                    // converte data/hora
                     LocalDateTime ldt = null;
+
+                    info(dataHora.getObject());
                     if (dataHora.getObject() != null && !dataHora.getObject().isBlank()) {
                         ldt = LocalDateTime.parse(dataHora.getObject(), HTML5_DT);
                     }
@@ -45,17 +47,21 @@ public class NovoJogoPage extends WebPage {
                             .add("timeB", timeB.getObject())
                             .add("placarA", placarA.getObject() == null ? 0 : placarA.getObject())
                             .add("placarB", placarB.getObject() == null ? 0 : placarB.getObject())
-                            .add("status", status.getObject()) // ex.: NAO_INICIADO | EM_ANDAMENTO | FINALIZADO
+                            .add("status", status.getObject())
                             .add("dataHoraPartida", ldt == null ? "" : ldt.toString())
                             .build();
 
-                    // monta URL base usando o mesmo context-root da app
-                    String base = getRequest().getClientUrl().toString(); // p.ex. http://localhost:8080/app/...
-                    // pega só o esquema+host+porta+contextRoot:
-                    String contextRoot = getRequestCycle().getUrlRenderer().renderContextRelativeUrl("/");
-                    String origin = base.substring(0, base.indexOf(contextRoot) + contextRoot.length());
-                    String url = origin + "api/jogos";
+                    String url;
+                    try {
+                        String base = getUrlBase();
+                        url = base + "/api/jogos";
+                    } catch (Exception e) {
+                        // Fallback seguro
+                        url = "http://localhost:8080/api/jogos"; // Ajuste se necessário
+                        error("Erro ao montar URL. Usando fallback: " + url);
+                    }
 
+                    //todo colocar try-with-resources
                     HttpClient client = HttpClient.newHttpClient();
                     HttpRequest req = HttpRequest.newBuilder(URI.create(url))
                             .header("Content-Type", "application/json")
@@ -70,7 +76,7 @@ public class NovoJogoPage extends WebPage {
                         timeB.setObject("");
                         placarA.setObject(0);
                         placarB.setObject(0);
-                        status.setObject("NAO_INICIADO");
+                        status.setObject("EM_ANDAMENTO");
                         dataHora.setObject("");
                     } else {
                         error("Falha ao cadastrar jogo: HTTP " + resp.statusCode() + " - " + resp.body());
@@ -78,6 +84,21 @@ public class NovoJogoPage extends WebPage {
                 } catch (Exception e) {
                     error("Erro ao cadastrar jogo: " + e.getMessage());
                 }
+            }
+
+            private String getUrlBase() {
+                ServletWebRequest servletRequest = (ServletWebRequest) getRequest();
+                var req = servletRequest.getContainerRequest();
+
+                String scheme = req.getScheme();     // "http" ou "https"
+                String serverName = req.getServerName();
+                int serverPort = req.getServerPort();
+                String contextPath = req.getContextPath(); // "/app-game-1.0-SNAPSHOT"
+
+                // Monta a base corretamente
+                return scheme + "://" + serverName +
+                        (serverPort == 80 || serverPort == 443 ? "" : ":" + serverPort) +
+                        contextPath;
             }
         };
         add(form);
@@ -92,11 +113,9 @@ public class NovoJogoPage extends WebPage {
         form.add(nfA, nfB);
 
         form.add(new DropDownChoice<>("status", status,
-                Model.ofList(java.util.List.of("NAO_INICIADO","EM_ANDAMENTO","FINALIZADO"))).setRequired(true));
+                Model.ofList(java.util.List.of("EM_ANDAMENTO","FINALIZADO"))).setRequired(true));
 
-        // campo texto que usa input type="datetime-local" no HTML
         form.add(new TextField<>("dataHora", dataHora));
-
         form.add(new Button("salvar"));
     }
 

@@ -8,10 +8,16 @@ import java.time.LocalDateTime;
  * Entidade Jogo.
  */
 @Entity
-@Table(name = "jogos")
+@Table(name = "jogos", schema = "public")
 public class Jogo {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @SequenceGenerator(
+            name = "jogos_seq_gen",
+            sequenceName = "jogos_seq",
+            schema = "public",
+            allocationSize = 1   // pode ser 1 se preferir
+    )
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "jogos_seq_gen")
     private Long id;
 
     @Column(name = "time_a", nullable = false)
@@ -30,6 +36,7 @@ public class Jogo {
     private LocalDateTime dataHoraPartida;
 
     @Column(name = "status_jogo", nullable = false)
+    @Enumerated(EnumType.STRING)
     private StatusJogo statusJogo;
 
     public Jogo() {

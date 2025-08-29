@@ -28,7 +28,7 @@ wait $WF_PID || true
 # habilita debug condicionalmente
 DEBUG_ARGS=""
 if [ "${DEBUG:-false}" = "true" ]; then
-  DEBUG_ARGS="--debug ${DEBUG_PORT:-8787}"
+  DEBUG_ARGS="--debug ${DEBUG_PORT:-5005}"
 fi
 
 exec "$WILDFLY_HOME/bin/standalone.sh" -c standalone.xml -b 0.0.0.0 -bmanagement 0.0.0.0 $DEBUG_ARGS

@@ -12,5 +12,8 @@ public class AppGameApplication extends WebApplication {
     @Override
     public void init() {
         super.init();
+
+        // Desativa CSP completamente (só para DEV)
+        getCspSettings().blocking().disabled();
     }
 }
