@@ -34,9 +34,12 @@ services:
       DB_PASS: ${DB_PASS}
       DS_NAME: ${DS_NAME}
       JDBC_DRIVER_NAME: ${JDBC_DRIVER_NAME}
+      DEBUG: "true"
+      DEBUG_PORT: 5005
     ports:
       - "8080:8080"   # app
       - "9990:9990"   # console/admin
+      - "5005:5005"   # debug
     volumes:
       - ./deployments:/opt/jboss/wildfly/standalone/deployments
     networks: [appnet]

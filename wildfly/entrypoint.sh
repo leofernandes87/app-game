@@ -24,4 +24,11 @@ done
 # reinicia normal (foreground)
 kill $WF_PID
 wait $WF_PID || true
-exec "$WILDFLY_HOME/bin/standalone.sh" -c standalone.xml -b 0.0.0.0 -bmanagement 0.0.0.0
+
+# habilita debug condicionalmente
+DEBUG_ARGS=""
+if [ "${DEBUG:-false}" = "true" ]; then
+  DEBUG_ARGS="--debug ${DEBUG_PORT:-8787}"
+fi
+
+exec "$WILDFLY_HOME/bin/standalone.sh" -c standalone.xml -b 0.0.0.0 -bmanagement 0.0.0.0 $DEBUG_ARGS
