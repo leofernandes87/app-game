@@ -43,8 +43,8 @@ public class RabbitConsumer {
     @Inject
     LongPollHub hub;
 
-    private Connection conn;
-    private Channel ch;
+    private Connection connection;
+    private Channel channel;
     private String consumerTag;
 
     /**
@@ -53,7 +53,7 @@ public class RabbitConsumer {
      * <p>Passos:
      * <ol>
      *   <li>Cria {@link ConnectionFactory} lendo variáveis de ambiente (host/porta/credenciais).</li>
-     *   <li>Abre {@link #conn} e {@link #ch} e garante a existência da fila {@link #QUEUE}.</li>
+     *   <li>Abre {@link #connection} e {@link #channel} e garante a existência da fila {@link #QUEUE}.</li>
      *   <li>Inicia o {@code basicConsume} em auto-ack: ao receber uma entrega,
      *       transforma em String (UTF-8) e chama {@link LongPollHub#publish(String)}.</li>
      * </ol>
@@ -71,15 +71,15 @@ public class RabbitConsumer {
         f.setUsername(System.getenv().getOrDefault("RABBITMQ_USER", "guest"));
         f.setPassword(System.getenv().getOrDefault("RABBITMQ_PASS", "guest"));
 
-        conn = f.newConnection("appgame-consumer");
-        ch = conn.createChannel();
+        connection = f.newConnection("appgame-consumer");
+        channel = connection.createChannel();
 
         // Fila simples (não durável) para desenvolvimento.
         // Se quiser manter mensagens após restart do broker, torne 'durable=true'.
-        ch.queueDeclare(QUEUE, false, false, false, null);
+        channel.queueDeclare(QUEUE, false, false, false, null);
 
         // Inicia consumo com autoAck = true (sem reentrega em falha de processamento).
-        consumerTag = ch.basicConsume(QUEUE, true, (ctag, delivery) -> {
+        consumerTag = channel.basicConsume(QUEUE, true, (ctag, delivery) -> {
             String body = new String(delivery.getBody(), StandardCharsets.UTF_8);
             // reencaminha para todos os long-pollers conectados
             hub.publish(body);
@@ -92,16 +92,16 @@ public class RabbitConsumer {
      * <p>Passos:
      * <ol>
      *   <li>Cancela o consumidor pelo {@link #consumerTag}.</li>
-     *   <li>Fecha o {@link #ch} se ainda estiver aberto.</li>
-     *   <li>Fecha a {@link #conn} se ainda estiver aberta.</li>
+     *   <li>Fecha o {@link #channel} se ainda estiver aberto.</li>
+     *   <li>Fecha a {@link #connection} se ainda estiver aberta.</li>
      * </ol>
      *
      * <p>Chamado automaticamente pelo container antes de destruir o bean.</p>
      */
     @PreDestroy
     public void stop() throws Exception {
-        if (ch != null && ch.isOpen() && consumerTag != null) ch.basicCancel(consumerTag);
-        if (ch != null && ch.isOpen()) ch.close();
-        if (conn != null && conn.isOpen()) conn.close();
+        if (channel != null && channel.isOpen() && consumerTag != null) channel.basicCancel(consumerTag);
+        if (channel != null && channel.isOpen()) channel.close();
+        if (connection != null && connection.isOpen()) connection.close();
     }
 }

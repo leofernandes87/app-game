@@ -53,6 +53,10 @@ public class RabbitPublisher {
     @PostConstruct
     public void init() throws Exception {
         //todo preciso extrair para um auxiliar pra evitar duplicação de código
+        /*
+        MELHORIA:
+        Canal do Rabbit não é thread-safe
+        */
         ConnectionFactory f = new ConnectionFactory();
 
         f.setHost(System.getenv().getOrDefault("RABBITMQ_HOST", "localhost"));
@@ -61,13 +65,7 @@ public class RabbitPublisher {
         f.setPassword(System.getenv().getOrDefault("RABBITMQ_PASS", "guest"));
 
         connection = f.newConnection("appgame-publisher");
-
-        /*
-        MELHORIA:
-        Canal do Rabbit não é thread-safe
-        No publisher, abra um canal por publicação ou sincronize o método. Abrir canal é barato e elimina race:
         channel = connection.createChannel();
-        */
 
         // fila simples
         channel.queueDeclare(QUEUE, false, false, false, null);
