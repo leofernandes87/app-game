@@ -32,6 +32,13 @@ public class JogoService {
         jogo.setStatusJogo(StatusJogo.EM_ANDAMENTO);
         Jogo persisted = jogoRepository.persist(jogo);
 
+        /*
+        MELHORIA:
+        Publicar evento só após commit do DB
+        Hoje o RabbitPublisher pode disparar antes do commit e o
+        front “ver” um jogo que ainda não existe. Use um hook pós-commit.
+        */
+
         rabbitPublisher.publishJogoCriado(persisted);
         return persisted;
     }

@@ -63,32 +63,66 @@
     </table>
     <!--script do long pool-->
     <script>
+        /**
+         * Loop de long-poll:
+         * - Mantém uma conexão aberta com /api/events/long-poll.
+         * - Se o servidor responder 200 (chegou evento), paramos o loop e submetemos o formulário de filtros
+         *   para recarregar a listagem.
+         * - Se responder 204 (timeout sem evento), reconectamos imediatamente (sem “espera”).
+         * - Em erros/4xx/5xx aplicamos backoff exponencial até 5s.
+         * - Não disparamos requisição se já houver uma em voo (inflight) ou se a aba estiver oculta.
+         */
         (function () {
+            // Lê a URL do endpoint (injetada pela página via wicket:id="eventsUrl")
             const url = (document.getElementById('eventsUrl').textContent||'').trim();
             if (!url) return;
 
+            // Controle do loop:
+            // - inflight: evita paralelismo de requisições
+            // - stopped: flag para encerrar definitivamente o loop
+            // - backoff: intervalo (ms) entre tentativas em caso de erro
             let inflight = false, stopped = false, backoff = 250;
+
+            // Agenda a próxima iteração do loop, se o loop não tiver sido parado
             function schedule(ms){ if(!stopped) setTimeout(poll, ms); }
 
+            // Uma iteração do long-poll
             function poll(){
+                // Não tenta se:
+                // - já paramos (stopped)
+                // - já existe uma requisição em andamento (inflight)
+                // - a aba está em background (document.hidden) -> poupa recursos
                 if (stopped || inflight || document.hidden) { schedule(500); return; }
-                inflight = true;
+                inflight = true; // liberamos para nova tentativa
 
                 fetch(url, { method:'GET', cache:'no-store' })
                     .then(res => {
                         inflight = false;
+                        // 204 = timeout sem evento → reconecta imediatamente (sem backoff)
                         if (res.status === 204) { backoff = 250; schedule(0); return; }
                         if (res.ok) {
+                            // 200 = chegou evento → paramos o loop e submetemos o form para recarregar a lista
                             stopped = true;
                             document.getElementById('filtrosFormDom')?.submit();
                             return;
                         }
+                        // Para quaisquer outros status (4xx/5xx), aplicamos backoff exponencial até 5s
                         backoff = Math.min(backoff*2, 5000);
                         schedule(backoff);
+
+                        // Backoff é esperar um tempo antes de tentar de novo quando algo falha.
+                        // Evita tempestade de requisições quando o servidor ou a rede estão instáveis.
+                        // Se você re-tentar na mesma velocidade, só piora a sobrecarga.
+                        // Dá tempo para o serviço se recuperar (ex.: restart do WildFly, queda do Rabbit, DNS)
+                        // Diminui custo no cliente e no servidor (CPU, logs, rate limits).
                     })
+                    // Erro de rede → backoff exponencial igual ao caso de erro HTTP
                     .catch(() => { inflight = false; backoff = Math.min(backoff*2, 5000); schedule(backoff); });
             }
+            // Quando a aba volta ao foco, fazemos uma tentativa rápida
             document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) schedule(100); });
+
+            // Disparo inicial imediato do loop
             schedule(0);
         })();
     </script>
